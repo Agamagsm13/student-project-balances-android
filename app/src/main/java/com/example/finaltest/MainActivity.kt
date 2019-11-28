@@ -1,5 +1,7 @@
 package com.example.finaltest
 
+//random comment here
+
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

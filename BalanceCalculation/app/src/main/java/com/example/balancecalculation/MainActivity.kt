@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     var idViewed : ArrayList<Int> = ArrayList<Int>()
     var transactions: ArrayList<Transaction> = ArrayList()
-    var balances:MutableMap<Curr, Double> = mutableMapOf()
+    var balances:MutableMap<Curr, Pair<Double, Double>> = mutableMapOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -33,29 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun balance(currency: Curr, transactions: ArrayList<Transaction>):Double{
-        idViewed.clear()
-        var balance = 0.0
-        var minBalance = 0.0
-        for (transaction in transactions){
-            if (transaction.status == Status.Complete){
-                if(!idViewed.contains(transaction.id)){
-                    idViewed.add(transaction.id)
-                    if (transaction.type == Type.Deposit)
-                        balance += (transaction.amount - transaction.commission)
-                    else {
-                        balance -= (transaction.amount + transaction.commission)
-                        if (balance < minBalance){
-                            minBalance = balance
-                        }
-                    }
-                }
-            }
-        }
-        if (minBalance < 0)
-            balance = minBalance
-        return balance
-    }
+
 
     fun groupByCurrency(transactions: ArrayList<Transaction>):MutableMap<Curr, ArrayList<Transaction>>{
         var groupedTransactions :MutableMap<Curr,ArrayList<Transaction>> = mutableMapOf()
@@ -85,19 +63,18 @@ class MainActivity : AppCompatActivity() {
 
     fun showBalances(){
         var text:TextView = findViewById(R.id.test)
-
-
        // var balances:MutableMap<Curr, Double> = mutableMapOf()
         var exception : Int = -1
         var negativeBalances:MutableMap<Curr, Double> = mutableMapOf()
         var groupedByCurrency = groupByCurrency(transactions)
+        var balancesWithMin:MutableMap<Curr, Pair<Double, Double>> = mutableMapOf()
         for (key in groupedByCurrency.keys){
-            balances.set(key, balance(key, groupedByCurrency.getValue(key)))
+            balances.set(key, Pair(balance(key, groupedByCurrency.getValue(key)).first, balance(key, groupedByCurrency.getValue(key)).second))
         }
         for (balance in balances){
-            if (balance.value < 0){
+            if (balance.value.second < 0){
                 exception = 1
-                negativeBalances.set(balance.key, balance.value)
+                negativeBalances.set(balance.key, balance.value.second)
             }
         }
         var negativeBalancesString = ""
@@ -111,9 +88,7 @@ class MainActivity : AppCompatActivity() {
             bui.setPositiveButton("OH YEAH!"){dialog, which ->
                 for (negativeBalance in negativeBalances){
                   changeStartBalance(negativeBalance.key)
-
                 }
-
             }
             val alertDialog: AlertDialog = bui.create()
             alertDialog.show()
@@ -123,6 +98,29 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
+    fun balance(currency: Curr, transactions: ArrayList<Transaction>):Pair<Double, Double>{
+        idViewed.clear()
+        var balance = 0.0
+        var minBalance = 0.0
+        for (transaction in transactions){
+            if (transaction.status == Status.Complete){
+                if(!idViewed.contains(transaction.id)){
+                    idViewed.add(transaction.id)
+                    if (transaction.type == Type.Deposit)
+                        balance += (transaction.amount - transaction.commission)
+                    else {
+                        balance -= (transaction.amount + transaction.commission)
+                        if (balance < minBalance){
+                            minBalance = balance
+                        }
+                    }
+                }
+            }
+        }
+        return Pair(balance, minBalance)
+    }
+
     var id = -1
     fun changeStartBalance(currency: Curr){
         var text:TextView = findViewById(R.id.test)
@@ -132,13 +130,18 @@ class MainActivity : AppCompatActivity() {
         var input = EditText(this)
         bui.setView(input)
         bui.setPositiveButton("OK"){dialog, which ->
-            if (input.text.toString().toDouble()>=abs(balances.getValue(currency))){
-                balances[currency] = balances.getValue(currency) + input.text.toString().toDouble()
+            if (input.text.toString().toDouble()>=abs(balances.getValue(currency).second)){
+                balances[currency] = Pair(balances.getValue(currency).first + input.text.toString().toDouble(), 0.0)
                 // addTransaction()
+                var balancesString = ""
+                for (bal in balances){
+                    balancesString += "${bal.key.toString()} Balance: ${bal.value.first.toString()}\n"
+                }
+
                 text.text = balances.toString()
             }
             else{
-                dialog.dismiss()
+                changeStartBalance(currency)
 
             }
         }

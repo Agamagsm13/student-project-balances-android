@@ -4,15 +4,35 @@ import android.content.DialogInterface
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import co.metalab.asyncawait.async
+import co.metalab.asyncawait.await
+import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.FuelError
+import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.Response
+import com.github.kittinunf.fuel.core.ResponseDeserializable
+import com.github.kittinunf.fuel.gson.responseObject
+import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.result.Result
+
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.gson.Gson
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+
 import java.sql.Time
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.abs
@@ -21,130 +41,154 @@ class MainActivity : AppCompatActivity() {
 
     var idViewed : ArrayList<Int> = ArrayList<Int>()
     var transactions: ArrayList<Transaction> = ArrayList()
-    var balances:MutableMap<Curr, Pair<Double, Double>> = mutableMapOf()
+    var balances:MutableMap<String, Pair<Double, Double>> = mutableMapOf()
+    var allTrades:ArrayList<Trade>? = arrayListOf()
+    var allTransactions:ArrayList<Transaction>? = arrayListOf()
+
+    val urlTrades = "http://3.248.170.197:9999/bcv/trades"
+    val urlTransactions = "http://3.248.170.197:9999/bcv/transactions"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        var text:TextView = findViewById(R.id.test)
         var addTransactionButton: FloatingActionButton = findViewById(R.id.addTransactions)
         addTransactionButton.setBackgroundColor(Color.BLUE)
-        addTransactionButton.setOnClickListener(){
-            addTransactions()
+        addTransactionButton.setOnClickListener{
+
+        }
+
+        async {
+            allTrades = await { urlTrades.httpGet().responseObject<ArrayList<Trade>>().third.get() }
+            allTransactions = await {
+                urlTransactions.httpGet().responseObject<ArrayList<Transaction>>().third.get()
+            }
+
+            var grouped = groupTransactionsByMonth(allTransactions)
+            var st: String = ""
+            var resultTransactions: MutableMap<Int, MutableMap<String, Double?>> = mutableMapOf()
+            for (i in 1..12) {
+                resultTransactions[i] = calcTransForMonth(grouped[i])
+            }
+            var tr= groupTransactionsByYear(allTransactions)
+            st = tr.keys.toString() + tr.values
+            text.text = st
         }
 
     }
 
-
-
-    fun groupByCurrency(transactions: ArrayList<Transaction>):MutableMap<Curr, ArrayList<Transaction>>{
-        var groupedTransactions :MutableMap<Curr,ArrayList<Transaction>> = mutableMapOf()
-        for (transaction in transactions){
-            if (!groupedTransactions.containsKey(transaction.currency))
-                groupedTransactions.put(transaction.currency, ArrayList<Transaction>())
-            groupedTransactions.getValue(transaction.currency).add(transaction)
+    fun groupTransactionsByYear(transactions:ArrayList<Transaction>?):MutableMap<Int,  ArrayList<Transaction>>{
+        var yearTransactions:MutableMap<Int, ArrayList<Transaction>> = mutableMapOf()
+        var year = 0
+        for (transaction in transactions!!){
+            year  = dateTimeFormmatter(transaction.dateTime).year
+            yearTransactions[year] = ArrayList()
         }
-        return groupedTransactions
+        if (transactions != null){
+            for (transaction in transactions){
+                yearTransactions.getValue(year).add(transaction)
+
+            }
+        }
+        return yearTransactions
     }
 
-    fun addTransaction(date:String, type:Type, currency: Curr, amount: Double, comission:Float, status: Status, id:Int){
-        transactions.add((Transaction(date, type, currency, amount, comission, status, id)))
-        showBalances()
-    }
-    fun addTransactions(){
-        transactions.clear()
-        transactions.add(Transaction("2019-10-01 10:10:10", Type.Deposit, Curr.BTC, 100.0, 0.0f, Status.Complete, 1))
-        transactions.add(Transaction("2019-10-01 10:10:11", Type.Withdraw, Curr.BTC, 200.0, 0.0f, Status.Complete, 2))
-        transactions.add(Transaction("2019-10-01 10:10:12", Type.Deposit, Curr.BTC, 450.0, 0.0f, Status.Complete, 3))
-        transactions.add(Transaction("2019-10-01 10:10:13", Type.Deposit, Curr.RUB, 100.0, 0.0f, Status.Complete, 4))
-        transactions.add(Transaction("2019-10-01 10:10:14", Type.Deposit, Curr.RUB, 200.0, 0.0f, Status.Complete, 5))
-        transactions.add(Transaction("2019-10-01 10:10:15", Type.Withdraw, Curr.RUB, 450.0, 0.0f, Status.Complete, 6))
-        Toast.makeText(this, "Transactions added", Toast.LENGTH_SHORT).show();
-        showBalances()
-    }
-
-    fun showBalances(){
+    fun groupTransactionsByMonth(transactions:ArrayList<Transaction>?):MutableMap<Int,  ArrayList<Transaction>>{
+        var monthlyTransactions:MutableMap<Int, ArrayList<Transaction>> = mutableMapOf()
         var text:TextView = findViewById(R.id.test)
-       // var balances:MutableMap<Curr, Double> = mutableMapOf()
-        var exception : Int = -1
-        var negativeBalances:MutableMap<Curr, Double> = mutableMapOf()
-        var groupedByCurrency = groupByCurrency(transactions)
-        var balancesWithMin:MutableMap<Curr, Pair<Double, Double>> = mutableMapOf()
-        for (key in groupedByCurrency.keys){
-            balances.set(key, Pair(balance(key, groupedByCurrency.getValue(key)).first, balance(key, groupedByCurrency.getValue(key)).second))
+        for (i in 1..12) {
+            monthlyTransactions[i] = ArrayList()
         }
-        for (balance in balances){
-            if (balance.value.second < 0){
-                exception = 1
-                negativeBalances.set(balance.key, balance.value.second)
+        var month = 0
+        if (transactions != null){
+            for (transaction in transactions){
+                month = dateTimeFormmatter(transaction.dateTime).monthValue
+                text.text = month.toString()
+
+                monthlyTransactions.getValue(month).add(transaction)
+
             }
         }
-        var negativeBalancesString = ""
-        for (bal in negativeBalances){
-            negativeBalancesString += "${bal.key.toString()} Balance: ${bal.value.toString()}\n"
-        }
-        if (exception == 1){
-            var bui:AlertDialog.Builder = AlertDialog.Builder(this)
-            bui.setMessage("Во время рассчёта баланс следующих валют становился отрицателен:\n$negativeBalancesString\n Задать начальный баланс?")
-            bui.setNegativeButton("NoNoNo"){dialog, which ->  dialog.cancel()}
-            bui.setPositiveButton("OH YEAH!"){dialog, which ->
-                for (negativeBalance in negativeBalances){
-                  changeStartBalance(negativeBalance.key)
-                }
-            }
-            val alertDialog: AlertDialog = bui.create()
-            alertDialog.show()
-        }
-        else
-            text.text = balances.toString()
-
-
+        return monthlyTransactions
     }
 
-    fun balance(currency: Curr, transactions: ArrayList<Transaction>):Pair<Double, Double>{
-        idViewed.clear()
-        var balance = 0.0
-        var minBalance = 0.0
-        for (transaction in transactions){
-            if (transaction.status == Status.Complete){
-                if(!idViewed.contains(transaction.id)){
-                    idViewed.add(transaction.id)
-                    if (transaction.type == Type.Deposit)
-                        balance += (transaction.amount - transaction.commission)
-                    else {
-                        balance -= (transaction.amount + transaction.commission)
-                        if (balance < minBalance){
-                            minBalance = balance
+
+    fun calcTransForMonth(transactions: ArrayList<Transaction>?):MutableMap<String,Double?>{
+        var result:MutableMap<String, Double?> = mutableMapOf()
+        if (transactions != null){
+            for (transaction in transactions){
+                if (transaction.transactionStatus == "Complete"){
+                    if (result.containsKey(transaction.currency)){
+                        if (transaction.transactionType == "Deposit")
+                            result[transaction.currency] = result[transaction.currency]?.plus(transaction.amount - transaction.commission)
+                        else {
+                            result[transaction.currency] = result[transaction.currency]?.minus(transaction.amount + transaction.commission)
                         }
+                    }
+                    else{
+                        if (transaction.transactionType == "Deposit")
+                            result[transaction.currency] = transaction.amount
+                        else
+                            result[transaction.currency] = -transaction.amount
                     }
                 }
             }
         }
-        return Pair(balance, minBalance)
+        return result
     }
 
-    var id = -1
-    fun changeStartBalance(currency: Curr){
-        var text:TextView = findViewById(R.id.test)
-        var bui:AlertDialog.Builder = AlertDialog.Builder(this)
-        bui.setMessage("Укажите начальный балaнс $currency")
 
-        var input = EditText(this)
-        bui.setView(input)
-        bui.setPositiveButton("OK"){dialog, which ->
-            if (input.text.toString().toDouble()>=abs(balances.getValue(currency).second)){
-                balances[currency] = Pair(balances.getValue(currency).first + input.text.toString().toDouble(), 0.0)
-                // addTransaction()
-                var balancesString = ""
-                for (bal in balances){
-                    balancesString += "${bal.key.toString()} Balance: ${bal.value.first.toString()}\n"
+
+    fun dateTimeFormmatter(string:String):LocalDateTime{
+        val parsedDate = LocalDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME)
+        return parsedDate
+    }
+
+    fun getAllTrades(){
+        "http://3.248.170.197:9999/bcv/trades"
+            .httpGet()
+            .responseObject<ArrayList<Trade>> {
+                    _, _, result ->
+                when (result) {
+
+                    is  Result.Success -> {
+                        allTrades = result.get()
+
+                    }
+
+                    is Result.Failure ->
+                    {
+                        println("--------------------------")
+                        println(result.getException())
+                        println("--------------------------")
+                    }
                 }
-
-                text.text = balances.toString()
             }
-            else{
-                changeStartBalance(currency)
-
-            }
-        }
-        bui.show()
     }
+
+    fun getAllTransactions(){
+        "http://3.248.170.197:9999/bcv/transactions"
+            .httpGet()
+            .responseObject<ArrayList<Transaction>> {
+                    _, _, result ->
+                when (result) {
+
+                    is  Result.Success -> {
+                        allTransactions = result.get()
+
+                    }
+
+                    is Result.Failure ->
+                    {
+                        println("--------------------------")
+                        println(result.getException())
+                        println("--------------------------")
+                    }
+                }
+            }
+    }
+
+
+
+   // }
 }

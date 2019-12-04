@@ -1,33 +1,14 @@
 package com.example.balancecalculation
 
-import java.time.temporal.TemporalAmount
-import java.util.*
+data class Transaction(
+    var amount: Double,
+    var commission : Double,
+    var currency: String,
+    var dateTime: String,
+    var id: Int,
+    var transactionStatus: String,
+    var transactionType: String,
+    var transactionValueId: String
 
-enum class Status{
-    Complete, NotComlete
-}
-enum class Curr{
-    BTC, USD, RUB
-}
-enum class Type{
-    Deposit, Withdraw
-}
-class Transaction(
-    date: String,
-    typeTransaction : Type,
-    curr: Curr,
-    amountTransaction : Double,
-    commissionTransaction : Float,
-    statusTransaction: Status,
-    idTransaction : Int
-) {
-    val dataTime = date
-    val type = typeTransaction
-    val currency = curr
-    val amount = amountTransaction
-    val commission = commissionTransaction
-    val status = statusTransaction
-    val id = idTransaction
+)
 
-
-}

@@ -1,8 +1,10 @@
 package com.example.balancecalculation
 
+import java.math.BigDecimal
+
 data class Transaction(
-    var amount: Double,
-    var commission : Double,
+    var amount: BigDecimal,
+    var commission : BigDecimal,
     var currency: String,
     var dateTime: String,
     var id: Int,

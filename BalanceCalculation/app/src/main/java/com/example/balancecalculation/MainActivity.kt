@@ -5,9 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import co.metalab.asyncawait.async
 import com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChartView
 import com.example.chartcorekotlin.AAChartConfiger.*
@@ -97,6 +95,14 @@ class MainActivity : AppCompatActivity()  {
         }
         allTrades = await { urlTrades.httpGet().responseObject<ArrayList<Trade>>().third.get() }
         actualTikers = await { urlTikersActual.httpGet().responseObject<ArrayList<Tiker>>().third.get() }
+
+        var allTradesTransactions:ArrayList<Any> = arrayListOf()
+        if (allTrades != null){
+            allTrades!!.sortBy { it.dateTime }
+        }
+        if (allTransactions != null){
+            allTransactions!!.sortBy { it.dateTime }
+        }
 
 
         var groupedTransactions =
@@ -276,6 +282,7 @@ class MainActivity : AppCompatActivity()  {
             .titleFontWeight(AAChartFontWeightType.Bold)
             .subtitle("2019")
             .yAxisTitle("Values in $")
+            .legendEnabled(true)
             .chartType(AAChartType.Pie)
             .axesTextColor("#0B1929")
             .dataLabelsFontColor("#0B1929")
@@ -537,6 +544,59 @@ class MainActivity : AppCompatActivity()  {
     //------------------About transactions--------------------//
 
 
+  private fun balanceForDate(date: String):MutableMap<String, BigDecimal?>{
+      var result:MutableMap<String, BigDecimal?> = mutableMapOf()
+      var nextTrade:Trade? = allTrades?.get(0)
+      var nextTransaction:Transaction? = allTransactions?.get(0)
+      var flag = false
+      if ((nextTrade == null) and (nextTransaction == null))
+          flag = true
+      else if ((nextTrade != null) and (nextTransaction != null))
+          if ((dateTimeFormmatter(nextTrade!!.dateTime) > dateTimeFormmatter(date)) and
+              (dateTimeFormmatter(nextTransaction!!.dateTime) > dateTimeFormmatter(date)))
+              flag = true
+      while (!flag){
+          if (nextTrade != null){
+              if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
+                  result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
+              if (!result.keys.contains(nextTrade.tradedPriceCurrency))
+                  result[nextTrade.tradedPriceCurrency] = BigDecimal(0.0)
+              when (nextTrade.tradeType){
+                  ("Sell") -> {
+                      result[nextTrade.tradedQuantityCurrency] = result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
+                      result[nextTrade.tradedPriceCurrency] =
+                          result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice*nextTrade.tradedQuantity - nextTrade.commission)
+                  }
+                  ("Buy") -> {
+                      result[nextTrade.tradedQuantityCurrency] = result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity)
+                      result[nextTrade.tradedPriceCurrency] =
+                          result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice*nextTrade.tradedQuantity + nextTrade.commission)
+                  }
+              }
+          }
+          if (nextTransaction != null){
+              if (nextTransaction.transactionStatus == "Complete") {
+                  if (nextTransaction.transactionType == "Deposit")
+                      result[nextTransaction.currency] =
+                          result[nextTransaction.currency]?.plus(nextTransaction.amount - nextTransaction.commission)
+                  else {
+                      result[nextTransaction.currency] =
+                          result[nextTransaction.currency]?.minus(nextTransaction.amount + nextTransaction.commission)
+
+                  }
+              }
+          }
+
+          if ((nextTrade == null) and (nextTransaction == null))
+              flag = true
+          else if ((nextTrade != null) and (nextTransaction != null))
+              if ((dateTimeFormmatter(nextTrade!!.dateTime) > dateTimeFormmatter(date)) and
+                  (dateTimeFormmatter(nextTransaction!!.dateTime) > dateTimeFormmatter(date)))
+                          flag = true
+      }
+      return result
+  }
+
     private fun groupTransactionsByYear(transactions: ArrayList<Transaction>?): MutableMap<Int, ArrayList<Transaction>> {
         var yearTransactions: MutableMap<Int, ArrayList<Transaction>> = mutableMapOf()
         var year = 0
@@ -589,9 +649,9 @@ class MainActivity : AppCompatActivity()  {
                         }
                     } else {
                         if (transaction.transactionType == "Deposit")
-                            result[transaction.currency] = transaction.amount
+                            result[transaction.currency] = transaction.amount - transaction.commission
                         else
-                            result[transaction.currency] = -transaction.amount
+                            result[transaction.currency] = -(transaction.amount + transaction.commission)
                     }
                 }
             }
@@ -601,29 +661,10 @@ class MainActivity : AppCompatActivity()  {
 
 
     private fun dateTimeFormmatter(string: String): LocalDateTime {
-        val parsedDate = LocalDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME)
-        return parsedDate
+        return LocalDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME)
     }
 
 
-    fun getAllTransactions() {
-        "http://3.248.170.197:9999/bcv/transactions"
-            .httpGet()
-            .responseObject<ArrayList<Transaction>> { _, _, result ->
-                when (result) {
 
-                    is Result.Success -> {
-                        allTransactions = result.get()
-
-                    }
-
-                    is Result.Failure -> {
-                        println("--------------------------")
-                        println(result.getException())
-                        println("--------------------------")
-                    }
-                }
-            }
-    }
 
 }

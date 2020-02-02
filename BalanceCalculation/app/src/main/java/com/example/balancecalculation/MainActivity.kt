@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } else
                 date = dateTimeFormmatter("2014-12-31T23:59:59")
-            finalBalances = balanceForDate(date)
+            finalBalances = balanceForDateOnlyTrades(date)
             drawGraphColumn()
         }
     }
@@ -273,7 +273,7 @@ class MainActivity : AppCompatActivity() {
         var currencies: LinkedList<String> = LinkedList()
         var dataStart: LocalDateTime
         var dataEnd: LocalDateTime = dateTimeFormmatter("${year}-02-01T00:00:00")
-        var balanceForMonth = balanceForDate(dataEnd)
+        var balanceForMonth = balanceForDateOnlyTrades(dataEnd)
         for (key in balanceForMonth.keys)
             currencies.add(key)
         var yearBalance: ArrayList<MutableMap<String, BigDecimal?>> = arrayListOf()
@@ -292,7 +292,7 @@ class MainActivity : AppCompatActivity() {
                 m != 12 -> dateTimeFormmatter("${year}-${m + 1}-01T00:00:00")
                 else -> dateTimeFormmatter("${year + 1}-01-01T00:00:00")
             }
-            balanceForMonth = balanceFromDateToDate(dataStart, dataEnd)
+            balanceForMonth = balanceFromDateToDateOnlyTrades(dataStart, dataEnd)
             for (key in balanceForMonth.keys)
                 if (!currencies.contains(key))
                     currencies.add(key)
@@ -522,5 +522,129 @@ class MainActivity : AppCompatActivity() {
         return LocalDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME)
     }
 
+    private fun balanceForDateOnlyTrades(date: LocalDateTime): MutableMap<String, BigDecimal?> {
+        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        var flagTrades = false
+        var nextTrade: Trade? = null
+        if (allTrades == null) {
+            flagTrades = true
+        } else {
+            nextTrade = allTrades!![0]
+        }
+
+        var i = 1
+        while (!flagTrades)  {
+
+            if (!flagTrades) {
+                if (dateTimeFormmatter(nextTrade!!.dateTime) > date) {
+                    flagTrades = true
+                } else {
+                    if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
+                        result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
+                    if (!result.keys.contains(nextTrade.tradedPriceCurrency))
+                        result[nextTrade.tradedPriceCurrency] = BigDecimal(0.0)
+
+                    when (nextTrade.tradeType) {
+                        ("Sell") -> {
+                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
+                                var k = 2
+                            }
+                            result[nextTrade.tradedQuantityCurrency] =
+                                result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
+                            if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0))
+                                result[nextTrade.tradedQuantityCurrency] = BigDecimal(0)
+                            result[nextTrade.tradedPriceCurrency] =
+                                result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
+                        }
+                        ("Buy") -> {
+                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
+                                var k = 2
+                            }
+                            result[nextTrade.tradedQuantityCurrency] =
+                                result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
+                            result[nextTrade.tradedPriceCurrency] =
+                                result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
+                            if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0))
+                                result[nextTrade.tradedPriceCurrency] = BigDecimal(0)
+                        }
+                    }
+                }
+            }
+
+            if (!flagTrades) {
+                if (allTrades!!.size == i) {
+                    flagTrades = true
+                } else {
+                    nextTrade = allTrades!![i]
+                }
+            }
+
+            i++
+        }
+        return result
+    }
+
+    private fun balanceFromDateToDateOnlyTrades(
+        dateStart: LocalDateTime,
+        dateEnd: LocalDateTime
+    ): MutableMap<String, BigDecimal?> {
+        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        var flagTrades = false
+        var nextTrade: Trade? = null
+        if (allTrades == null) {
+            flagTrades = true
+        } else {
+            nextTrade = allTrades!![0]
+        }
+
+        var i = 1
+        while (!flagTrades)  {
+
+            if (!flagTrades) {
+                if (dateTimeFormmatter(nextTrade!!.dateTime) > dateEnd) {
+                    flagTrades = true
+                } else {
+                    if (nextTrade.tradedPriceCurrency == "USDT" || nextTrade.tradedQuantityCurrency == "USDT") {
+                        var k = 2
+                        k += 2
+                    }
+                    if (dateTimeFormmatter(nextTrade!!.dateTime) >= dateStart) {
+                        if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
+                            result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
+                        if (!result.keys.contains(nextTrade.tradedPriceCurrency))
+                            result[nextTrade.tradedPriceCurrency] = BigDecimal(0.0)
+                        when (nextTrade.tradeType) {
+                            ("Sell") -> {
+                                result[nextTrade.tradedQuantityCurrency] =
+                                    result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
+                                if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0))
+                                    result[nextTrade.tradedQuantityCurrency] = BigDecimal(0)
+                                result[nextTrade.tradedPriceCurrency] =
+                                    result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
+                            }
+                            ("Buy") -> {
+                                result[nextTrade.tradedQuantityCurrency] =
+                                    result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
+                                result[nextTrade.tradedPriceCurrency] =
+                                    result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
+                                if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0))
+                                    result[nextTrade.tradedPriceCurrency] = BigDecimal(0)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!flagTrades) {
+                if (allTrades!!.size == i) {
+                    flagTrades = true
+                } else {
+                    nextTrade = allTrades!![i]
+                }
+            }
+            i++
+        }
+        return result
+    }
 
 }

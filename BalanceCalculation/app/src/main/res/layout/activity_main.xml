@@ -19,7 +19,18 @@
             android:layout_height="match_parent"
             android:background="#F162FF"
             android:layout_weight="50"
-            />
+
+
+            >
+
+            <Button
+                android:id="@+id/PopupButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:text="Year" />
+
+        </com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChartView>
 
 
 

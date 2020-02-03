@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import android.widget.*
 import co.metalab.asyncawait.async
 import com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChartView
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         var inf: MenuInflater = menuInflater
         inf.inflate(R.menu.popup, menu)
+
         return true
     }
 
@@ -33,6 +35,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu1 -> {
                 isMenu1Pressed = true
                 Start()
+
                 true
             }
             R.id.menu2 -> {
@@ -42,7 +45,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 } else {
                     drawGraphPie(finalBalances)
-
+                    showYearsButton?.visibility = View.INVISIBLE
                     true
                 }
             }
@@ -58,6 +61,9 @@ class MainActivity : AppCompatActivity() {
     var rates: MutableMap<String, BigDecimal> = mutableMapOf()
     var allTrades: ArrayList<Trade>? = arrayListOf()
     var allTransactions: ArrayList<Transaction>? = arrayListOf()
+    var showYearsButton: Button? = null
+    var years: ArrayList<Int> = arrayListOf()
+    var yearForSeriesGraph:Int = 2014
     private var aaChartView: AAChartView? = null
     private var aaChartModel: AAChartModel? = null
     var finalBalances: MutableMap<String, BigDecimal?> = mutableMapOf()
@@ -69,6 +75,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         aaChartView = findViewById(R.id.AAChartView)
+        showYearsButton = findViewById<Button>(R.id.PopupButton)
+
     }
 
     private fun Start() {
@@ -92,13 +100,22 @@ class MainActivity : AppCompatActivity() {
             }
             allTrades = await { urlTrades.httpGet().responseObject<ArrayList<Trade>>().third.get() }
 
+            showYearsButton?.visibility = View.VISIBLE
             if (allTrades != null) {
                 allTrades!!.sortBy { it.dateTime }
+                years.add(dateTimeFormmatter(allTrades!!.first().dateTime).year)
+                if (!years.contains(dateTimeFormmatter(allTrades!!.last().dateTime).year))
+                    years.add(dateTimeFormmatter(allTrades!!.last().dateTime).year)
             }
             if (allTransactions != null) {
                 allTransactions!!.sortBy { it.dateTime }
+                if (!years.contains(dateTimeFormmatter(allTransactions!!.last().dateTime).year))
+                    years.add(dateTimeFormmatter(allTransactions!!.last().dateTime).year)
+                if (!years.contains(dateTimeFormmatter(allTransactions!!.first().dateTime).year))
+                    years.add(dateTimeFormmatter(allTransactions!!.first().dateTime).year)
             }
             var date: LocalDateTime
+
             if ((allTransactions != null) and (allTrades != null)) {
                 date = dateTimeFormmatter(allTrades!!.last().dateTime)
                 if (dateTimeFormmatter(allTransactions!!.last().dateTime) > date) {
@@ -107,9 +124,31 @@ class MainActivity : AppCompatActivity() {
             } else
                 date = dateTimeFormmatter("2014-12-31T23:59:59")
             finalBalances = balanceForDateOnlyTrades(date)
+            for (i in (years.min()!!..years.max()!!)){
+                if (!years.contains(i))
+                    years.add(i)
+            }
+            years.sort()
+            var popupMenu: PopupMenu? = null
+            showYearsButton?.setOnClickListener{
+                popupMenu = PopupMenu(this@MainActivity, showYearsButton)
+                for (year in years){
+                    popupMenu!!.menu.add(year.toString())
+                }
+                popupMenu!!.menuInflater.inflate(R.menu.popup_year,popupMenu!!.menu)
+                popupMenu!!.setOnMenuItemClickListener { item ->
+                    yearForSeriesGraph = item.title.toString().toInt()
+                    drawGraphColumn()
+                    true
+                }
+                popupMenu!!.show()
+
+            }
+
             drawGraphColumn()
         }
     }
+
 
 
     private fun CurrencyRateMult(balances: ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>>): ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>> {
@@ -138,7 +177,7 @@ class MainActivity : AppCompatActivity() {
             .titleFontSize(20f)
             .subtitleFontColor("#0B1929")
             .titleFontWeight(AAChartFontWeightType.Bold)
-            .subtitle("2019")
+            .subtitle(yearForSeriesGraph.toString())
             .yAxisTitle("Values in $")
             .chartType(AAChartType.Column)
             .axesTextColor("#0B1929")
@@ -183,7 +222,7 @@ class MainActivity : AppCompatActivity() {
                     "Dec"
                 )
             )
-            .series(modelingSeriesForGraph(2019))
+            .series(modelingSeriesForGraph(yearForSeriesGraph))
 
         aaChartView?.aa_drawChartWithChartModel(aaChartModel!!)
 
@@ -646,5 +685,6 @@ class MainActivity : AppCompatActivity() {
         }
         return result
     }
+
 
 }

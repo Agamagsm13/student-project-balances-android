@@ -2,10 +2,8 @@ package com.example.balancecalculation
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
+import android.util.Log
+import android.view.*
 import android.widget.*
 import co.metalab.asyncawait.async
 import com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChartView
@@ -35,22 +33,6 @@ class MainActivity : AppCompatActivity() {
             R.id.menu1 -> {
                 isMenu1Pressed = true
                 Start()
-
-                true
-            }
-            R.id.menu2 -> {
-                if (!isMenu1Pressed) {
-                    Toast.makeText(this, "You have no transactions/trades", Toast.LENGTH_SHORT)
-                        .show()
-                    true
-                } else {
-                    drawGraphPie(finalBalances)
-                    showYearsButton?.visibility = View.INVISIBLE
-                    true
-                }
-            }
-            R.id.menu3 -> {
-                Toast.makeText(this, "What's up?", Toast.LENGTH_SHORT).show()
                 true
             }
             else -> false
@@ -58,12 +40,16 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    var rates: MutableMap<String, BigDecimal> = mutableMapOf()
-    var allTrades: ArrayList<Trade>? = arrayListOf()
-    var allTransactions: ArrayList<Transaction>? = arrayListOf()
+    private var rates: MutableMap<String, BigDecimal> = mutableMapOf()
+    var counterForGraphs = 0
+    private var allTrades: ArrayList<Trade>? = arrayListOf()
+    private var allTransactions: ArrayList<Transaction>? = arrayListOf()
+    var allAddedTransactions: ArrayList<Transaction>? = arrayListOf()
     var showYearsButton: Button? = null
     var years: ArrayList<Int> = arrayListOf()
-    var yearForSeriesGraph:Int = 2014
+    var yearForSeriesGraph: Int = 2014
+    var isDownloaded = false
+    var idForAddTrans = 0
     private var aaChartView: AAChartView? = null
     private var aaChartModel: AAChartModel? = null
     var finalBalances: MutableMap<String, BigDecimal?> = mutableMapOf()
@@ -75,11 +61,38 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         aaChartView = findViewById(R.id.AAChartView)
-        showYearsButton = findViewById<Button>(R.id.PopupButton)
+        showYearsButton = findViewById(R.id.PopupButton)
 
     }
 
     private fun Start() {
+        aaChartView!!.setOnTouchListener(object : OnSwipeTouchListener() {
+            override fun onSwipeLeft() {
+                counterForGraphs = (counterForGraphs + 1) % 10
+                when(counterForGraphs){
+                    1 ->{ drawGraphPie(finalBalances)
+                    showYearsButton?.visibility = View.INVISIBLE
+                        true}
+                    2 ->{ drawGraphInputOutput(allTransactions, 2014)
+                        showYearsButton?.visibility = View.VISIBLE
+                        true}
+                }
+
+            }
+
+            override fun onSwipeRight() {
+                counterForGraphs = (counterForGraphs - 1) % 10
+                when(counterForGraphs){
+                    0 ->{ Start()
+                        showYearsButton?.visibility = View.VISIBLE
+                        true
+                    }
+                    1 ->{ drawGraphPie(finalBalances)
+                        showYearsButton?.visibility = View.INVISIBLE
+                        true}
+                }
+            }
+        })
         rates["BTC"] = BigDecimal(7496.58)
         rates["EOS"] = BigDecimal(2.744)
         rates["ETH"] = BigDecimal(150.2)
@@ -95,50 +108,59 @@ class MainActivity : AppCompatActivity() {
         rates["USDT"] = BigDecimal(1.0003)
         rates["RUB"] = BigDecimal(0.016)
         async {
-            allTransactions = await {
-                urlTransactions.httpGet().responseObject<ArrayList<Transaction>>().third.get()
-            }
-            allTrades = await { urlTrades.httpGet().responseObject<ArrayList<Trade>>().third.get() }
-
-            showYearsButton?.visibility = View.VISIBLE
-            if (allTrades != null) {
-                allTrades!!.sortBy { it.dateTime }
-                years.add(dateTimeFormmatter(allTrades!!.first().dateTime).year)
-                if (!years.contains(dateTimeFormmatter(allTrades!!.last().dateTime).year))
-                    years.add(dateTimeFormmatter(allTrades!!.last().dateTime).year)
-            }
-            if (allTransactions != null) {
-                allTransactions!!.sortBy { it.dateTime }
-                if (!years.contains(dateTimeFormmatter(allTransactions!!.last().dateTime).year))
-                    years.add(dateTimeFormmatter(allTransactions!!.last().dateTime).year)
-                if (!years.contains(dateTimeFormmatter(allTransactions!!.first().dateTime).year))
-                    years.add(dateTimeFormmatter(allTransactions!!.first().dateTime).year)
-            }
-            var date: LocalDateTime
-
-            if ((allTransactions != null) and (allTrades != null)) {
-                date = dateTimeFormmatter(allTrades!!.last().dateTime)
-                if (dateTimeFormmatter(allTransactions!!.last().dateTime) > date) {
-                    date = dateTimeFormmatter(allTransactions!!.last().dateTime)
+            if (!isDownloaded) {
+                allTransactions = await {
+                    urlTransactions.httpGet().responseObject<ArrayList<Transaction>>().third.get()
                 }
-            } else
-                date = dateTimeFormmatter("2014-12-31T23:59:59")
-            finalBalances = balanceForDateOnlyTrades(date)
-            for (i in (years.min()!!..years.max()!!)){
-                if (!years.contains(i))
-                    years.add(i)
+                allTrades =
+                    await { urlTrades.httpGet().responseObject<ArrayList<Trade>>().third.get() }
+
+                showYearsButton?.visibility = View.VISIBLE
+                if (allTrades != null) {
+                    allTrades!!.sortBy { it.dateTime }
+                    years.add(dateTimeFormmatter(allTrades!!.first().dateTime).year)
+                    if (!years.contains(dateTimeFormmatter(allTrades!!.last().dateTime).year))
+                        years.add(dateTimeFormmatter(allTrades!!.last().dateTime).year)
+                }
+                if (allTransactions != null) {
+                    allTransactions!!.sortBy { it.dateTime }
+                    if (!years.contains(dateTimeFormmatter(allTransactions!!.last().dateTime).year))
+                        years.add(dateTimeFormmatter(allTransactions!!.last().dateTime).year)
+                    if (!years.contains(dateTimeFormmatter(allTransactions!!.first().dateTime).year))
+                        years.add(dateTimeFormmatter(allTransactions!!.first().dateTime).year)
+                }
+                var date: LocalDateTime
+
+                if ((allTransactions != null) and (allTrades != null)) {
+                    date = dateTimeFormmatter(allTrades!!.last().dateTime)
+                    if (dateTimeFormmatter(allTransactions!!.last().dateTime) > date) {
+                        date = dateTimeFormmatter(allTransactions!!.last().dateTime)
+                    }
+                } else
+                    date = dateTimeFormmatter("2014-12-31T23:59:59")
+                finalBalances = balanceForDateOnlyTrades(date)
+                for (i in (years.min()!!..years.max()!!)) {
+                    if (!years.contains(i))
+                        years.add(i)
+                }
+                years.sort()
+                isDownloaded = true
             }
-            years.sort()
             var popupMenu: PopupMenu? = null
-            showYearsButton?.setOnClickListener{
+            showYearsButton?.setOnClickListener {
                 popupMenu = PopupMenu(this@MainActivity, showYearsButton)
-                for (year in years){
+                for (year in years) {
                     popupMenu!!.menu.add(year.toString())
                 }
-                popupMenu!!.menuInflater.inflate(R.menu.popup_year,popupMenu!!.menu)
+                popupMenu!!.menuInflater.inflate(R.menu.popup_year, popupMenu!!.menu)
                 popupMenu!!.setOnMenuItemClickListener { item ->
+                    if (counterForGraphs == 0){
                     yearForSeriesGraph = item.title.toString().toInt()
                     drawGraphColumn()
+                    }
+                    if (counterForGraphs == 2){
+                        drawGraphInputOutput(allTransactions, item.title.toString().toInt())
+                    }
                     true
                 }
                 popupMenu!!.show()
@@ -148,7 +170,6 @@ class MainActivity : AppCompatActivity() {
             drawGraphColumn()
         }
     }
-
 
 
     private fun CurrencyRateMult(balances: ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>>): ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>> {
@@ -288,6 +309,79 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun drawGraphInputOutput(transactions: ArrayList<Transaction>?, year: Int) {
+        var input = modelingSeriesForInputOutput(transactions, year).first
+        var output = modelingSeriesForInputOutput(transactions, year).second
+        aaChartModel = AAChartModel()
+            .chartType(AAChartType.Bar)
+            .title("Input/Output")
+            .titleFontColor("#0B1929")
+            .titleFontSize(20f)
+            .titleFontWeight(AAChartFontWeightType.Bold)
+            .subtitleFontColor("#0B1929")
+            .axesTextColor("#0B1929")
+            .dataLabelsFontColor("#0B1929")
+            .yAxisTitle("Dollars")
+            .subtitleFontWeight(AAChartFontWeightType.Bold)
+            .categories(arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
+            .legendEnabled(true)
+            .colorsTheme(arrayOf(AAGradientColor.berrySmoothieColor(), AAGradientColor.oceanBlueColor()))
+            .animationType(AAChartAnimationType.EaseInQuart)
+            .xAxisReversed(true)
+            .animationDuration(1200)
+            .series(arrayOf(
+                AASeriesElement()
+                    .name("Input $")
+                    .data(input),
+                AASeriesElement()
+                    .name("Output $")
+                    .data(output)
+            ))
+        aaChartView?.aa_drawChartWithChartModel(aaChartModel!!)
+    }
+
+
+    private fun modelingSeriesForInputOutput(transactions: ArrayList<Transaction>?, year: Int):Pair<Array<Any>, Array<Any>>{
+        var transaction: Transaction? = null
+        var index = 0
+        var flagSearchFirst = -1                                                                                                                //-1 -> there is no transactions at all
+        if (transactions != null){
+            transaction = transactions[0]
+            flagSearchFirst = 0                                                                                                                 //0 -> there is some transactions
+        }
+        var resultInput: ArrayList<BigDecimal> = arrayListOf()
+        var resultOutput: ArrayList<BigDecimal> = arrayListOf()
+        for (i in 0..11){
+            resultInput.add(BigDecimal(0))
+            resultOutput.add(BigDecimal(0))
+        }
+        while (flagSearchFirst == 0){
+            when {
+                dateTimeFormmatter(transaction!!.dateTime).year == year -> flagSearchFirst = 1                                                 //1 -> it is first transaction on this year
+                transactions!!.last().transactionValueId == transaction.transactionValueId -> flagSearchFirst = -2                                                                                                            //-2 -> there is no transactions on this year
+                else -> {index++
+                    transaction = transactions[index]
+                    }
+            }
+        }
+        if (flagSearchFirst == 1){
+            while ((dateTimeFormmatter(transaction!!.dateTime).year == year) and (index < transactions!!.size) ){
+                if (transaction.transactionStatus == "Complete"){
+                    if(transaction.transactionType == "Deposit"){
+                        resultInput[dateTimeFormmatter(transaction.dateTime).monthValue - 1] += transaction.amount
+                    }
+                    else{
+                        resultOutput[dateTimeFormmatter(transaction.dateTime).monthValue - 1] += transaction.amount
+                    }
+                }
+                index++
+                if (index < transactions!!.size)
+                    transaction = transactions!![index]
+            }
+        }
+        return Pair(resultInput.toArray(), resultOutput.toArray())
+    }
+
     private fun modelingSeriesForPie(balances: MutableMap<String, BigDecimal?>): Array<Any> {
         var result: ArrayList<Any> = arrayListOf()
         var dat: ArrayList<BigDecimal?> = arrayListOf()
@@ -396,18 +490,12 @@ class MainActivity : AppCompatActivity() {
 
                     when (nextTrade.tradeType) {
                         ("Sell") -> {
-                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
-                                var k = 2
-                            }
                             result[nextTrade.tradedQuantityCurrency] =
                                 result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
                             result[nextTrade.tradedPriceCurrency] =
                                 result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
                         }
                         ("Buy") -> {
-                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
-                                var k = 2
-                            }
                             result[nextTrade.tradedQuantityCurrency] =
                                 result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
                             result[nextTrade.tradedPriceCurrency] =
@@ -426,10 +514,6 @@ class MainActivity : AppCompatActivity() {
                     if (!result.keys.contains(nextTransaction.currency))
                         result[nextTransaction.currency] = BigDecimal(0.0)
                     if (nextTransaction.transactionStatus == "Complete") {
-                        if (nextTransaction.currency == "USDT") {
-                            var k = 2
-                            k += 2
-                        }
                         if (nextTransaction.transactionType == "Deposit")
                             result[nextTransaction.currency] =
                                 result[nextTransaction.currency]?.plus(nextTransaction.amount - nextTransaction.commission)
@@ -487,10 +571,6 @@ class MainActivity : AppCompatActivity() {
                 if (dateTimeFormmatter(nextTrade!!.dateTime) > dateEnd) {
                     flagTrades = true
                 } else {
-                    if (nextTrade.tradedPriceCurrency == "USDT" || nextTrade.tradedQuantityCurrency == "USDT") {
-                        var k = 2
-                        k += 2
-                    }
                     if (dateTimeFormmatter(nextTrade!!.dateTime) >= dateStart) {
                         if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
                             result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
@@ -522,10 +602,6 @@ class MainActivity : AppCompatActivity() {
                         if (!result.keys.contains(nextTransaction.currency))
                             result[nextTransaction.currency] = BigDecimal(0.0)
                         if (nextTransaction.transactionStatus == "Complete") {
-                            if (nextTransaction.currency == "USDT"){
-                                var k = 2
-                                k += 2
-                            }
                             if (nextTransaction.transactionType == "Deposit")
                                 result[nextTransaction.currency] =
                                     result[nextTransaction.currency]?.plus(nextTransaction.amount - nextTransaction.commission)
@@ -572,7 +648,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         var i = 1
-        while (!flagTrades)  {
+        while (!flagTrades) {
 
             if (!flagTrades) {
                 if (dateTimeFormmatter(nextTrade!!.dateTime) > date) {
@@ -590,8 +666,22 @@ class MainActivity : AppCompatActivity() {
                             }
                             result[nextTrade.tradedQuantityCurrency] =
                                 result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
-                            if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0))
+                            if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0)){
+                                allAddedTransactions?.add(
+                                    Transaction(
+                                        amount = -result[nextTrade.tradedQuantityCurrency]!!,
+                                        commission = BigDecimal(0),
+                                        currency = nextTrade.tradedQuantityCurrency,
+                                        dateTime = nextTrade.dateTime,
+                                        id = idForAddTrans,
+                                        transactionStatus = "Complete",
+                                        transactionType = "Deposit",
+                                        transactionValueId = idForAddTrans.toString()
+                                    )
+                                )
+                                idForAddTrans++
                                 result[nextTrade.tradedQuantityCurrency] = BigDecimal(0)
+                            }
                             result[nextTrade.tradedPriceCurrency] =
                                 result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
                         }
@@ -603,8 +693,22 @@ class MainActivity : AppCompatActivity() {
                                 result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
                             result[nextTrade.tradedPriceCurrency] =
                                 result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
-                            if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0))
+                            if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)){
+                                allAddedTransactions?.add(
+                                    Transaction(
+                                        amount = -result[nextTrade.tradedPriceCurrency]!!,
+                                        commission = BigDecimal(0),
+                                        currency = nextTrade.tradedPriceCurrency,
+                                        dateTime = nextTrade.dateTime,
+                                        id = idForAddTrans,
+                                        transactionStatus = "Complete",
+                                        transactionType = "Deposit",
+                                        transactionValueId = idForAddTrans.toString()
+                                    )
+                                )
+                                idForAddTrans++
                                 result[nextTrade.tradedPriceCurrency] = BigDecimal(0)
+                            }
                         }
                     }
                 }
@@ -637,7 +741,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         var i = 1
-        while (!flagTrades)  {
+        while (!flagTrades) {
 
             if (!flagTrades) {
                 if (dateTimeFormmatter(nextTrade!!.dateTime) > dateEnd) {
@@ -656,8 +760,22 @@ class MainActivity : AppCompatActivity() {
                             ("Sell") -> {
                                 result[nextTrade.tradedQuantityCurrency] =
                                     result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
-                                if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0))
+                                if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0)) {
+                                    allAddedTransactions?.add(
+                                        Transaction(
+                                            amount = -result[nextTrade.tradedQuantityCurrency]!!,
+                                            commission = BigDecimal(0),
+                                            currency = nextTrade.tradedQuantityCurrency,
+                                            dateTime = nextTrade.dateTime,
+                                            id = idForAddTrans,
+                                            transactionStatus = "Complete",
+                                            transactionType = "Deposit",
+                                            transactionValueId = idForAddTrans.toString()
+                                        )
+                                    )
+                                    idForAddTrans++
                                     result[nextTrade.tradedQuantityCurrency] = BigDecimal(0)
+                                }
                                 result[nextTrade.tradedPriceCurrency] =
                                     result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
                             }
@@ -666,8 +784,22 @@ class MainActivity : AppCompatActivity() {
                                     result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
                                 result[nextTrade.tradedPriceCurrency] =
                                     result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
-                                if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0))
+                                if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)){
+                                    allAddedTransactions?.add(
+                                        Transaction(
+                                            amount = -result[nextTrade.tradedPriceCurrency]!!,
+                                            commission = BigDecimal(0),
+                                            currency = nextTrade.tradedPriceCurrency,
+                                            dateTime = nextTrade.dateTime,
+                                            id = idForAddTrans,
+                                            transactionStatus = "Complete",
+                                            transactionType = "Deposit",
+                                            transactionValueId = idForAddTrans.toString()
+                                        )
+                                    )
+                                    idForAddTrans++
                                     result[nextTrade.tradedPriceCurrency] = BigDecimal(0)
+                                }
                             }
                         }
                     }
@@ -685,6 +817,8 @@ class MainActivity : AppCompatActivity() {
         }
         return result
     }
+
+
 
 
 }

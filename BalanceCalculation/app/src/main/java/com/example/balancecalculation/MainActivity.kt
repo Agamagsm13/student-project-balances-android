@@ -1,8 +1,8 @@
 package com.example.balancecalculation
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.*
 import co.metalab.asyncawait.async
@@ -10,7 +10,6 @@ import com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChart
 import com.example.chartcorekotlin.AAChartConfiger.*
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.result.Result
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -20,19 +19,19 @@ import kotlin.collections.ArrayList
 class MainActivity : AppCompatActivity() {
 
 
-    var isMenu1Pressed = false
+    var isMenu1Pressed = false                                                                         //is there pressed popup menu on the right corner
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        var inf: MenuInflater = menuInflater
+        val inf: MenuInflater = menuInflater
         inf.inflate(R.menu.popup, menu)
 
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item?.itemId) {
+        return when (item.itemId) {
             R.id.menu1 -> {
                 isMenu1Pressed = true
-                Start()
+                start()
                 true
             }
             else -> false
@@ -40,22 +39,19 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private var rates: MutableMap<String, BigDecimal> = mutableMapOf()
     var counterForGraphs = 0
     private var allTrades: ArrayList<Trade>? = arrayListOf()
     private var allTransactions: ArrayList<Transaction>? = arrayListOf()
-    var allAddedTransactions: ArrayList<Transaction>? = arrayListOf()
+    private var allAddedTransactions: ArrayList<Transaction>? = arrayListOf()                          //transactions that added artificially for positive balances
     var showYearsButton: Button? = null
-    var years: ArrayList<Int> = arrayListOf()
-    var yearForSeriesGraph: Int = 2014
-    var isDownloaded = false
-    var idForAddTrans = 0
+    private var years: ArrayList<Int> = arrayListOf()
+    private var yearForSeriesGraph: Int = 2014
+    private var isDownloaded = false                                                                   //flag that client already downloaded his trades and transactions
+    private var idForAddTrans = 0
     private var aaChartView: AAChartView? = null
     private var aaChartModel: AAChartModel? = null
-    var finalBalances: MutableMap<String, BigDecimal?> = mutableMapOf()
+    var finalBalances = mutableMapOf<String, BigDecimal?>()                                            //balances after all trades and transactions
 
-    private val urlTrades = "http://3.248.170.197:9999/bcv/trades"
-    private val urlTransactions = "http://3.248.170.197:9999/bcv/transactions"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,48 +61,41 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun Start() {
+    @SuppressLint("ClickableViewAccessibility")
+    private fun start() {
+        val urlTrades = "http://3.248.170.197:9999/bcv/trades"
+        val urlTransactions = "http://3.248.170.197:9999/bcv/transactions"
         aaChartView!!.setOnTouchListener(object : OnSwipeTouchListener() {
             override fun onSwipeLeft() {
                 counterForGraphs = (counterForGraphs + 1) % 10
-                when(counterForGraphs){
-                    1 ->{ drawGraphPie(finalBalances)
-                    showYearsButton?.visibility = View.INVISIBLE
-                        true}
-                    2 ->{ drawGraphInputOutput(allTransactions, 2014)
+                when (counterForGraphs) {
+                    1 -> {
+                        drawGraphPie(finalBalances)
+                        showYearsButton?.visibility = View.INVISIBLE
+                    }
+                    2 -> {
+                        drawGraphInputOutput(allTransactions, 2014)
                         showYearsButton?.visibility = View.VISIBLE
-                        true}
+                    }
                 }
 
             }
 
             override fun onSwipeRight() {
                 counterForGraphs = (counterForGraphs - 1) % 10
-                when(counterForGraphs){
-                    0 ->{ Start()
+                when (counterForGraphs) {
+                    0 -> {
+                        start()
                         showYearsButton?.visibility = View.VISIBLE
-                        true
                     }
-                    1 ->{ drawGraphPie(finalBalances)
+                    1 -> {
+                        drawGraphPie(finalBalances)
                         showYearsButton?.visibility = View.INVISIBLE
-                        true}
+                    }
                 }
             }
         })
-        rates["BTC"] = BigDecimal(7496.58)
-        rates["EOS"] = BigDecimal(2.744)
-        rates["ETH"] = BigDecimal(150.2)
-        rates["BSV"] = BigDecimal(96.59)
-        rates["EOS"] = BigDecimal(2.744)
-        rates["EUR"] = BigDecimal(1.11)
-        rates["TRY"] = BigDecimal(0.17)
-        rates["EURS"] = BigDecimal(1.10471)
-        rates["BTG"] = BigDecimal(5.97)
-        rates["BCH"] = BigDecimal(213.34)
-        rates["LTC"] = BigDecimal(45.56)
-        rates["GBP"] = BigDecimal(1.32)
-        rates["USDT"] = BigDecimal(1.0003)
-        rates["RUB"] = BigDecimal(0.016)
+
         async {
             if (!isDownloaded) {
                 allTransactions = await {
@@ -146,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                 years.sort()
                 isDownloaded = true
             }
-            var popupMenu: PopupMenu? = null
+            var popupMenu: PopupMenu?
             showYearsButton?.setOnClickListener {
                 popupMenu = PopupMenu(this@MainActivity, showYearsButton)
                 for (year in years) {
@@ -154,11 +143,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 popupMenu!!.menuInflater.inflate(R.menu.popup_year, popupMenu!!.menu)
                 popupMenu!!.setOnMenuItemClickListener { item ->
-                    if (counterForGraphs == 0){
-                    yearForSeriesGraph = item.title.toString().toInt()
-                    drawGraphColumn()
+                    if (counterForGraphs == 0) {
+                        yearForSeriesGraph = item.title.toString().toInt()
+                        drawGraphColumn()
                     }
-                    if (counterForGraphs == 2){
+                    if (counterForGraphs == 2) {
                         drawGraphInputOutput(allTransactions, item.title.toString().toInt())
                     }
                     true
@@ -169,24 +158,6 @@ class MainActivity : AppCompatActivity() {
 
             drawGraphColumn()
         }
-    }
-
-
-    private fun CurrencyRateMult(balances: ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>>): ArrayList<MutableMap<Int, MutableMap<String, BigDecimal?>>> {
-        var rate = BigDecimal(0)
-        for (balance in balances) {
-            for (month in balance.keys) {
-                for (currency in balance[month]!!.keys) {
-                    rate = if (currency == "USD") {
-                        BigDecimal(1)
-                    } else {
-                        rates.getValue(currency)
-                    }
-                    (balance[month]!!)[currency] = ((balance[month]!!)[currency])?.multiply(rate)
-                }
-            }
-        }
-        return balances
     }
 
 
@@ -251,11 +222,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun drawGraphPie(balances: MutableMap<String, BigDecimal?>) {
-        var dats: ArrayList<String> = arrayListOf()
-        for (key in balances?.keys!!) {
+        val dats: ArrayList<String> = arrayListOf()
+        for (key in balances.keys) {
             dats.add(key)
         }
-        var data = modelingSeriesForPie(balances)
+        val data = modelingSeriesForPie(balances)
         aaChartModel = AAChartModel()
             .title("Portfolio")
             .titleFontColor("#0B1929")
@@ -310,8 +281,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun drawGraphInputOutput(transactions: ArrayList<Transaction>?, year: Int) {
-        var input = modelingSeriesForInputOutput(transactions, year).first
-        var output = modelingSeriesForInputOutput(transactions, year).second
+        val input = modelingSeriesForInputOutput(transactions, year).first
+        val output = modelingSeriesForInputOutput(transactions, year).second
         aaChartModel = AAChartModel()
             .chartType(AAChartType.Bar)
             .title("Input/Output")
@@ -323,93 +294,121 @@ class MainActivity : AppCompatActivity() {
             .dataLabelsFontColor("#0B1929")
             .yAxisTitle("Dollars")
             .subtitleFontWeight(AAChartFontWeightType.Bold)
-            .categories(arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
+            .categories(
+                arrayOf(
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec"
+                )
+            )
             .legendEnabled(true)
-            .colorsTheme(arrayOf(AAGradientColor.berrySmoothieColor(), AAGradientColor.oceanBlueColor()))
+            .colorsTheme(
+                arrayOf(
+                    AAGradientColor.berrySmoothieColor(),
+                    AAGradientColor.oceanBlueColor()
+                )
+            )
             .animationType(AAChartAnimationType.EaseInQuart)
             .xAxisReversed(true)
             .animationDuration(1200)
-            .series(arrayOf(
-                AASeriesElement()
-                    .name("Input $")
-                    .data(input),
-                AASeriesElement()
-                    .name("Output $")
-                    .data(output)
-            ))
+            .series(
+                arrayOf(
+                    AASeriesElement()
+                        .name("Input $")
+                        .data(input),
+                    AASeriesElement()
+                        .name("Output $")
+                        .data(output)
+                )
+            )
         aaChartView?.aa_drawChartWithChartModel(aaChartModel!!)
     }
 
 
-    private fun modelingSeriesForInputOutput(transactions: ArrayList<Transaction>?, year: Int):Pair<Array<Any>, Array<Any>>{
+    private fun modelingSeriesForInputOutput(
+        transactions: ArrayList<Transaction>?,
+        year: Int
+    ): Pair<Array<Any>, Array<Any>> {
         var transaction: Transaction? = null
         var index = 0
-        var flagSearchFirst = -1                                                                                                                //-1 -> there is no transactions at all
-        if (transactions != null){
+        var flagSearchFirst =
+            -1                                                                                                                //-1 -> there is no transactions at all
+        if (transactions != null) {
             transaction = transactions[0]
-            flagSearchFirst = 0                                                                                                                 //0 -> there is some transactions
+            flagSearchFirst =
+                0                                                                                                                 //0 -> there is some transactions
         }
-        var resultInput: ArrayList<BigDecimal> = arrayListOf()
-        var resultOutput: ArrayList<BigDecimal> = arrayListOf()
-        for (i in 0..11){
+        val resultInput: ArrayList<BigDecimal> = arrayListOf()
+        val resultOutput: ArrayList<BigDecimal> = arrayListOf()
+        for (i in 0..11) {
             resultInput.add(BigDecimal(0))
             resultOutput.add(BigDecimal(0))
         }
-        while (flagSearchFirst == 0){
+        while (flagSearchFirst == 0) {
             when {
-                dateTimeFormmatter(transaction!!.dateTime).year == year -> flagSearchFirst = 1                                                 //1 -> it is first transaction on this year
-                transactions!!.last().transactionValueId == transaction.transactionValueId -> flagSearchFirst = -2                                                                                                            //-2 -> there is no transactions on this year
-                else -> {index++
+                dateTimeFormmatter(transaction!!.dateTime).year == year -> flagSearchFirst =
+                    1                                                 //1 -> it is first transaction on this year
+                transactions!!.last().transactionValueId == transaction.transactionValueId -> flagSearchFirst =
+                    -2                                                                                                            //-2 -> there is no transactions on this year
+                else -> {
+                    index++
                     transaction = transactions[index]
-                    }
+                }
             }
         }
-        if (flagSearchFirst == 1){
-            while ((dateTimeFormmatter(transaction!!.dateTime).year == year) and (index < transactions!!.size) ){
-                if (transaction.transactionStatus == "Complete"){
-                    if(transaction.transactionType == "Deposit"){
+        if (flagSearchFirst == 1) {
+            while ((dateTimeFormmatter(transaction!!.dateTime).year == year) and (index < transactions!!.size)) {
+                if (transaction.transactionStatus == "Complete") {
+                    if (transaction.transactionType == "Deposit") {
                         resultInput[dateTimeFormmatter(transaction.dateTime).monthValue - 1] += transaction.amount
-                    }
-                    else{
+                    } else {
                         resultOutput[dateTimeFormmatter(transaction.dateTime).monthValue - 1] += transaction.amount
                     }
                 }
                 index++
-                if (index < transactions!!.size)
-                    transaction = transactions!![index]
+                if (index < transactions.size)
+                    transaction = transactions[index]
             }
         }
         return Pair(resultInput.toArray(), resultOutput.toArray())
     }
 
     private fun modelingSeriesForPie(balances: MutableMap<String, BigDecimal?>): Array<Any> {
-        var result: ArrayList<Any> = arrayListOf()
-        var dat: ArrayList<BigDecimal?> = arrayListOf()
-        for (value in balances.values!!) {
+        val result: ArrayList<Any> = arrayListOf()
+        val dat: ArrayList<BigDecimal?> = arrayListOf()
+        for (value in balances.values) {
             if (value != null)
                 dat.add(value)
             else dat.add(BigDecimal(0.0))
         }
-        var dat2: ArrayList<String> = arrayListOf()
-        for (key in balances.keys!!) {
+        val dat2: ArrayList<String> = arrayListOf()
+        for (key in balances.keys) {
             dat2.add(key)
         }
         for (i in 0 until dat2.size) {
-            result.add(arrayOf(dat2[i]!!, dat[i]!!))
+            result.add(arrayOf(dat2[i], dat[i]!!))
         }
         return result.toArray()
     }
 
     private fun modelingSeriesForGraph(year: Int): Array<AASeriesElement> {
-        var result: ArrayList<AASeriesElement> = arrayListOf()
-        var month = 1
-        var currencies: LinkedList<String> = LinkedList()
+        val result: ArrayList<AASeriesElement> = arrayListOf()
+        val currencies: LinkedList<String> = LinkedList()
         var dataStart: LocalDateTime
         var dataEnd: LocalDateTime = dateTimeFormmatter("${year}-02-01T00:00:00")
         var balanceForMonth = balanceForDateOnlyTrades(dataEnd)
         for (key in balanceForMonth.keys)
             currencies.add(key)
-        var yearBalance: ArrayList<MutableMap<String, BigDecimal?>> = arrayListOf()
+        val yearBalance: ArrayList<MutableMap<String, BigDecimal?>> = arrayListOf()
         for (i in 0..12)
             yearBalance.add(mutableMapOf())
         for (cur in balanceForMonth.keys) {
@@ -432,8 +431,8 @@ class MainActivity : AppCompatActivity() {
             for (cur in yearBalance[m - 1].keys)
                 yearBalance[m][cur] = yearBalance[m - 1].getValue(cur)!!
             for (key in balanceForMonth.keys) {
-                if (yearBalance[m]?.keys!!.contains(key))
-                    yearBalance[m]?.set(key, yearBalance[m]!![key]?.plus(balanceForMonth[key]!!))
+                if (yearBalance[m].keys.contains(key))
+                    yearBalance[m][key] = yearBalance[m][key]?.plus(balanceForMonth[key]!!)
                 else yearBalance[m][key] = balanceForMonth[key]
 
             }
@@ -441,10 +440,10 @@ class MainActivity : AppCompatActivity() {
 
 
         for (key in currencies) {
-            var dat: ArrayList<BigDecimal?> = arrayListOf()
-            for (month in 1..12) {
-                if (yearBalance[month]!!.containsKey(key))
-                    dat.add(yearBalance[month]?.getValue(key)!!)
+            val dat: ArrayList<BigDecimal?> = arrayListOf()
+            for (m in 1..12) {
+                if (yearBalance[m].containsKey(key))
+                    dat.add(yearBalance[m].getValue(key)!!)
                 else
                     dat.add(BigDecimal(0))
             }
@@ -460,7 +459,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun balanceForDate(date: LocalDateTime): MutableMap<String, BigDecimal?> {
-        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        val result: MutableMap<String, BigDecimal?> = mutableMapOf()
         var flagTrades = false
         var flagTransactions = false
         var nextTrade: Trade? = null
@@ -548,7 +547,7 @@ class MainActivity : AppCompatActivity() {
         dateStart: LocalDateTime,
         dateEnd: LocalDateTime
     ): MutableMap<String, BigDecimal?> {
-        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        val result: MutableMap<String, BigDecimal?> = mutableMapOf()
         var flagTrades = false
         var flagTransactions = false
         var nextTrade: Trade? = null
@@ -571,7 +570,7 @@ class MainActivity : AppCompatActivity() {
                 if (dateTimeFormmatter(nextTrade!!.dateTime) > dateEnd) {
                     flagTrades = true
                 } else {
-                    if (dateTimeFormmatter(nextTrade!!.dateTime) >= dateStart) {
+                    if (dateTimeFormmatter(nextTrade.dateTime) >= dateStart) {
                         if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
                             result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
                         if (!result.keys.contains(nextTrade.tradedPriceCurrency))
@@ -598,7 +597,7 @@ class MainActivity : AppCompatActivity() {
                 if (dateTimeFormmatter(nextTransaction!!.dateTime) > dateEnd) {
                     flagTransactions = true
                 } else {
-                    if (dateTimeFormmatter(nextTransaction!!.dateTime) >= dateStart) {
+                    if (dateTimeFormmatter(nextTransaction.dateTime) >= dateStart) {
                         if (!result.keys.contains(nextTransaction.currency))
                             result[nextTransaction.currency] = BigDecimal(0.0)
                         if (nextTransaction.transactionStatus == "Complete") {
@@ -638,7 +637,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun balanceForDateOnlyTrades(date: LocalDateTime): MutableMap<String, BigDecimal?> {
-        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        val result: MutableMap<String, BigDecimal?> = mutableMapOf()
         var flagTrades = false
         var nextTrade: Trade? = null
         if (allTrades == null) {
@@ -661,12 +660,9 @@ class MainActivity : AppCompatActivity() {
 
                     when (nextTrade.tradeType) {
                         ("Sell") -> {
-                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
-                                var k = 2
-                            }
                             result[nextTrade.tradedQuantityCurrency] =
                                 result[nextTrade.tradedQuantityCurrency]?.minus(nextTrade.tradedQuantity)
-                            if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0)){
+                            if (result[nextTrade.tradedQuantityCurrency]!! < BigDecimal(0)) {
                                 allAddedTransactions?.add(
                                     Transaction(
                                         amount = -result[nextTrade.tradedQuantityCurrency]!!,
@@ -686,14 +682,11 @@ class MainActivity : AppCompatActivity() {
                                 result[nextTrade.tradedPriceCurrency]?.plus(nextTrade.tradedPrice * nextTrade.tradedQuantity - nextTrade.commission)
                         }
                         ("Buy") -> {
-                            if (nextTrade.tradedQuantityCurrency == "USDT" || nextTrade.tradedPriceCurrency == "USDT") {
-                                var k = 2
-                            }
                             result[nextTrade.tradedQuantityCurrency] =
                                 result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
                             result[nextTrade.tradedPriceCurrency] =
                                 result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
-                            if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)){
+                            if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)) {
                                 allAddedTransactions?.add(
                                     Transaction(
                                         amount = -result[nextTrade.tradedPriceCurrency]!!,
@@ -731,7 +724,7 @@ class MainActivity : AppCompatActivity() {
         dateStart: LocalDateTime,
         dateEnd: LocalDateTime
     ): MutableMap<String, BigDecimal?> {
-        var result: MutableMap<String, BigDecimal?> = mutableMapOf()
+        val result: MutableMap<String, BigDecimal?> = mutableMapOf()
         var flagTrades = false
         var nextTrade: Trade? = null
         if (allTrades == null) {
@@ -747,11 +740,7 @@ class MainActivity : AppCompatActivity() {
                 if (dateTimeFormmatter(nextTrade!!.dateTime) > dateEnd) {
                     flagTrades = true
                 } else {
-                    if (nextTrade.tradedPriceCurrency == "USDT" || nextTrade.tradedQuantityCurrency == "USDT") {
-                        var k = 2
-                        k += 2
-                    }
-                    if (dateTimeFormmatter(nextTrade!!.dateTime) >= dateStart) {
+                    if (dateTimeFormmatter(nextTrade.dateTime) >= dateStart) {
                         if (!result.keys.contains(nextTrade.tradedQuantityCurrency))
                             result[nextTrade.tradedQuantityCurrency] = BigDecimal(0.0)
                         if (!result.keys.contains(nextTrade.tradedPriceCurrency))
@@ -784,7 +773,7 @@ class MainActivity : AppCompatActivity() {
                                     result[nextTrade.tradedQuantityCurrency]?.plus(nextTrade.tradedQuantity - nextTrade.commission)
                                 result[nextTrade.tradedPriceCurrency] =
                                     result[nextTrade.tradedPriceCurrency]?.minus(nextTrade.tradedPrice * nextTrade.tradedQuantity)
-                                if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)){
+                                if (result[nextTrade.tradedPriceCurrency]!! < BigDecimal(0)) {
                                     allAddedTransactions?.add(
                                         Transaction(
                                             amount = -result[nextTrade.tradedPriceCurrency]!!,
@@ -817,8 +806,6 @@ class MainActivity : AppCompatActivity() {
         }
         return result
     }
-
-
 
 
 }

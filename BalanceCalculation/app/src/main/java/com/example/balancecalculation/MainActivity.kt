@@ -10,6 +10,8 @@ import com.aachartmodel.aainfographics.aainfographicsLib.aachartConfiger.AAChart
 import com.example.chartcorekotlin.AAChartConfiger.*
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.fuel.httpGet
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -61,6 +63,16 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+// fun gett():BigDecimal{
+//     var rate:Tiker? = null
+//     async{
+//    var urlLastRate = "http://3.248.170.197:8888/bcv/quotes/ticker/btcusd"
+//     rate = await{urlLastRate.httpGet().responseObject<Tiker>().third.get()}}
+//
+//    return rate.exchangeRate
+//}
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun start() {
         val urlTrades = "http://3.248.170.197:9999/bcv/trades"
@@ -107,33 +119,34 @@ class MainActivity : AppCompatActivity() {
                 showYearsButton?.visibility = View.VISIBLE
                 if (allTrades != null) {
                     allTrades!!.sortBy { it.dateTime }
-                    years.add(dateTimeFormmatter(allTrades!!.first().dateTime).year)
+                    years.add(dateTimeFormmatter(allTrades!!.first().dateTime).year)                      //add years from first and last trades
                     if (!years.contains(dateTimeFormmatter(allTrades!!.last().dateTime).year))
                         years.add(dateTimeFormmatter(allTrades!!.last().dateTime).year)
                 }
                 if (allTransactions != null) {
                     allTransactions!!.sortBy { it.dateTime }
-                    if (!years.contains(dateTimeFormmatter(allTransactions!!.last().dateTime).year))
+                    if (!years.contains(dateTimeFormmatter(allTransactions!!.last().dateTime).year))      //add years from first and last transactions
                         years.add(dateTimeFormmatter(allTransactions!!.last().dateTime).year)
                     if (!years.contains(dateTimeFormmatter(allTransactions!!.first().dateTime).year))
                         years.add(dateTimeFormmatter(allTransactions!!.first().dateTime).year)
                 }
-                var date: LocalDateTime
 
-                if ((allTransactions != null) and (allTrades != null)) {
-                    date = dateTimeFormmatter(allTrades!!.last().dateTime)
-                    if (dateTimeFormmatter(allTransactions!!.last().dateTime) > date) {
-                        date = dateTimeFormmatter(allTransactions!!.last().dateTime)
+                var lastDate: LocalDateTime
+
+                if ((allTransactions != null) and (allTrades != null)) {                                  //searching last date
+                    lastDate = dateTimeFormmatter(allTrades!!.last().dateTime)
+                    if (dateTimeFormmatter(allTransactions!!.last().dateTime) > lastDate) {
+                        lastDate = dateTimeFormmatter(allTransactions!!.last().dateTime)
                     }
                 } else
-                    date = dateTimeFormmatter("2014-12-31T23:59:59")
-                finalBalances = balanceForDateOnlyTrades(date)
-                for (i in (years.min()!!..years.max()!!)) {
+                    lastDate = dateTimeFormmatter("2014-12-31T23:59:59")
+                finalBalances = balanceForDateOnlyTrades(lastDate)                                        //calculation of balances after all transactions and trades
+                for (i in (years.min()!!..years.max()!!)) {                                          //here we get sorted list of all trading years
                     if (!years.contains(i))
                         years.add(i)
                 }
                 years.sort()
-                isDownloaded = true
+                isDownloaded = true                                                                      //if we will draw column graph again? we won't download all trades and transactions
             }
             var popupMenu: PopupMenu?
             showYearsButton?.setOnClickListener {
@@ -341,7 +354,7 @@ class MainActivity : AppCompatActivity() {
         var transaction: Transaction? = null
         var index = 0
         var flagSearchFirst =
-            -1                                                                                                                //-1 -> there is no transactions at all
+            -1                                                                                                                     //-1 -> there is no transactions at all
         if (transactions != null) {
             transaction = transactions[0]
             flagSearchFirst =
@@ -382,18 +395,31 @@ class MainActivity : AppCompatActivity() {
         return Pair(resultInput.toArray(), resultOutput.toArray())
     }
 
+    suspend fun getRate(from: String):BigDecimal{
+        var urlLastRate = "http://3.248.170.197:8888/bcv/quotes/ticker/"
+        var rate =  (urlLastRate + from + "usd").httpGet().responseObject<Tiker>().third.get()
+        delay(1000)
+        return rate.exchangeRate
+    }
+
     private fun modelingSeriesForPie(balances: MutableMap<String, BigDecimal?>): Array<Any> {
         val result: ArrayList<Any> = arrayListOf()
         val dat: ArrayList<BigDecimal?> = arrayListOf()
-        for (value in balances.values) {
-            if (value != null)
-                dat.add(value)
-            else dat.add(BigDecimal(0.0))
-        }
         val dat2: ArrayList<String> = arrayListOf()
-        for (key in balances.keys) {
-            dat2.add(key)
+
+        for (balance in balances) {
+            var rate = BigDecimal(1)
+            if (balance.key != "USD"){
+ //               runBlocking{ rate = getRate(balance.key.toLowerCase())
+//            }
+           }
+            else rate = BigDecimal(1)
+            if (balance.value != null)
+                dat.add(balance.value!! * rate)
+            else dat.add(BigDecimal(0.0))
+            dat2.add(balance.key)
         }
+
         for (i in 0 until dat2.size) {
             result.add(arrayOf(dat2[i], dat[i]!!))
         }

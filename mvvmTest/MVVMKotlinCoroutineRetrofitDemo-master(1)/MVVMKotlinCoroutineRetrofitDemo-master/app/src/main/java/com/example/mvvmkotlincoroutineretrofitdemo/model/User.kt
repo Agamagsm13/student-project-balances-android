@@ -5,10 +5,10 @@ import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 
 data class User(
-    @SerializedName("id")
+    @SerializedName("exchangeRate")
     @Expose
-    val id: BigDecimal,
-    @SerializedName("name")
+    val exchangeRate: Number,
+    @SerializedName("date")
     @Expose
-    val name: String
+    val date: String
 )

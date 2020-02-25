@@ -24,7 +24,7 @@ class MainRepository {
             //here api calling became so simple just 1 line of code
             //there is no callback needed
 
-            val response = apiService.getUsers()
+            val response = apiService.getUsers().await()
 
             Log.d(TAG, "$response")
 

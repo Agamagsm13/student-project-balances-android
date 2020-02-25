@@ -35,8 +35,8 @@ class UserAdapter : RecyclerView.Adapter<UserAdapter.UserViewHolder>() {
 
         val user = userList[position]
 
-        holder.userId.text = user.id.toString()
-        holder.name.text = user.name
+        holder.userId.text = user.exchangeRate.toString()
+        holder.name.text = user.date
 
     }
 

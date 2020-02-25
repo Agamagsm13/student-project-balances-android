@@ -1,0 +1,67 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    xmlns:dist="http://schemas.android.com/apk/distribution"
+4    package="com.example.mvvmkotlincoroutineretrofitdemo"
+5    android:versionCode="1"
+6    android:versionName="1.0" >
+7
+8    <uses-sdk
+9        android:minSdkVersion="21"
+9-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml
+10        android:targetSdkVersion="29" />
+10-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml
+11
+12    <dist:module dist:instant="true" />
+12-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:6:5-40
+12-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:6:18-37
+13
+14    <uses-permission android:name="android.permission.INTERNET" />
+14-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:8:5-67
+14-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:8:22-64
+15
+16    <application
+16-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:10:5-24:19
+17        android:allowBackup="true"
+17-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:11:9-35
+18        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+18-->[androidx.core:core:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\419c1e4c69cc84d0a9af6aedb8b39477\core-1.1.0\AndroidManifest.xml:24:18-86
+19        android:debuggable="true"
+20        android:icon="@mipmap/ic_launcher"
+20-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:12:9-43
+21        android:label="@string/app_name"
+21-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:13:9-41
+22        android:roundIcon="@mipmap/ic_launcher_round"
+22-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:14:9-54
+23        android:supportsRtl="true"
+23-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:15:9-35
+24        android:testOnly="true"
+25        android:theme="@style/AppTheme" >
+25-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:16:9-40
+26        <activity android:name="com.example.mvvmkotlincoroutineretrofitdemo.view.MainActivity" >
+26-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:17:9-23:20
+26-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:17:19-52
+27            <intent-filter>
+27-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:18:13-22:29
+28                <action android:name="android.intent.action.MAIN" />
+28-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:19:17-69
+28-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:19:25-66
+29
+30                <category android:name="android.intent.category.LAUNCHER" />
+30-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:21:17-77
+30-->C:\Users\Slava\Downloads\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:21:27-74
+31            </intent-filter>
+32        </activity>
+33
+34        <provider
+34-->[androidx.lifecycle:lifecycle-process:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\22c1ccbd4e83665b81cc6d4d748f863b\lifecycle-process-2.1.0\AndroidManifest.xml:23:9-27:43
+35            android:name="androidx.lifecycle.ProcessLifecycleOwnerInitializer"
+35-->[androidx.lifecycle:lifecycle-process:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\22c1ccbd4e83665b81cc6d4d748f863b\lifecycle-process-2.1.0\AndroidManifest.xml:24:13-79
+36            android:authorities="com.example.mvvmkotlincoroutineretrofitdemo.lifecycle-process"
+36-->[androidx.lifecycle:lifecycle-process:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\22c1ccbd4e83665b81cc6d4d748f863b\lifecycle-process-2.1.0\AndroidManifest.xml:25:13-69
+37            android:exported="false"
+37-->[androidx.lifecycle:lifecycle-process:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\22c1ccbd4e83665b81cc6d4d748f863b\lifecycle-process-2.1.0\AndroidManifest.xml:26:13-37
+38            android:multiprocess="true" />
+38-->[androidx.lifecycle:lifecycle-process:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\22c1ccbd4e83665b81cc6d4d748f863b\lifecycle-process-2.1.0\AndroidManifest.xml:27:13-40
+39    </application>
+40
+41</manifest>

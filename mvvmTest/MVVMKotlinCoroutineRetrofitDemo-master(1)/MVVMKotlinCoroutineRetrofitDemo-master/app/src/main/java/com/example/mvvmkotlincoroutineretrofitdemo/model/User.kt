@@ -10,5 +10,5 @@ data class User(
     val id: BigDecimal,
     @SerializedName("name")
     @Expose
-    val name: Long
+    val name: String
 )

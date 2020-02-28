@@ -13,7 +13,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mainViewModel: MainViewModel
-    private lateinit var userAdapter: UserAdapter
+    private lateinit var rateAdapter: RateAdapter
+    private lateinit var transAdapter: TransAdapter
+    private lateinit var tradesAdapter: TradesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,31 +23,33 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-        userAdapter = UserAdapter()
+        rateAdapter = RateAdapter()
+        transAdapter = TransAdapter()
+        tradesAdapter = TradesAdapter()
 
         //setting layout manager to recycler view and adapter
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        recyclerView.adapter = userAdapter
+        recyclerView.adapter = tradesAdapter
 
         //before calling api register live data observer
         registerObservers()
 
         //calling user list api
-        mainViewModel.getUsers()
+        mainViewModel.getTrades()
 
     }
 
     private fun registerObservers() {
 
-        mainViewModel.usersSuccessLiveData.observe(this, Observer { userList ->
+        mainViewModel.tradesSuccessLiveData.observe(this, Observer { rateList ->
 
             //if it is not null then we will display all users
-            userList?.let {
-                userAdapter.setUsers(it)
+            rateList?.let {
+                tradesAdapter.setTrades(it)
             }
         })
 
-        mainViewModel.usersFailureLiveData.observe(this, Observer { isFailed ->
+        mainViewModel.tradesFailureLiveData.observe(this, Observer { isFailed ->
 
             //if it is not null then we will display all users
             isFailed?.let {

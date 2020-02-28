@@ -9,12 +9,28 @@ class MainViewModel : ViewModel() {
 
     private val mainRepository = MainRepository()
 
-    val usersSuccessLiveData = mainRepository.usersSuccessLiveData
-    val usersFailureLiveData = mainRepository.usersFailureLiveData
+    val rateSuccessLiveData = mainRepository.rateSuccessLiveData
+    val rateFailureLiveData = mainRepository.rateFailureLiveData
 
-    fun getUsers() {
-        //this is coroutine viewmodel scope to call suspend fun of repo
-        viewModelScope.launch { mainRepository.getUsers() }
+    val transSuccessLiveData = mainRepository.transSuccessLiveData
+    val transFailureLiveData = mainRepository.transFailureLiveData
+
+    val tradesSuccessLiveData = mainRepository.tradesSuccessLiveData
+    val tradesFailureLiveData = mainRepository.tradesFailureLiveData
+
+    fun getRates() {
+
+        viewModelScope.launch { mainRepository.getRates() }
+
+    }
+    fun getTrans() {
+
+        viewModelScope.launch { mainRepository.getTrans() }
+
+    }
+    fun getTrades() {
+
+        viewModelScope.launch { mainRepository.getTrades() }
 
     }
 }

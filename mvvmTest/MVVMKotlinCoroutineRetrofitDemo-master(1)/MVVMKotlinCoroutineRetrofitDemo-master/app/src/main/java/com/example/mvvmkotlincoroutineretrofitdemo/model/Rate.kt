@@ -4,11 +4,11 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 
-data class User(
+data class Rate(
     @SerializedName("exchangeRate")
     @Expose
     val exchangeRate: Number,
-    @SerializedName("date")
+    @SerializedName("timestamp")
     @Expose
-    val date: String
+    val date: Long
 )

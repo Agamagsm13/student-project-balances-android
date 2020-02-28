@@ -1,4 +1,4 @@
-#Tue Feb 25 18:58:24 MSK 2020
+#Fri Feb 28 13:14:56 MSK 2020
 base.0=D\:\\DSX Project\\student-project-balances-android\\mvvmTest\\MVVMKotlinCoroutineRetrofitDemo-master(1)\\MVVMKotlinCoroutineRetrofitDemo-master\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\out\\classes.dex
 path.1=classes.dex
 renamed.1=classes2.dex

@@ -22,9 +22,9 @@ class MainViewModel : ViewModel() {
 
 
 
-    fun getRates() {
+    fun getRates(instrument: String, timeFrom : Long, timeTo : Long) {
 
-        viewModelScope.launch { mainRepository.getRatesForTime() }
+        viewModelScope.launch { mainRepository.getRatesForTime(instrument, timeFrom, timeTo) }
 
     }
     fun getTrans() {

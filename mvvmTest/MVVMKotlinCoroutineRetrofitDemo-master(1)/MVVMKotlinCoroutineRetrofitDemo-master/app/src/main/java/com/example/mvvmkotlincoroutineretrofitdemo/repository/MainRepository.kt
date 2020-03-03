@@ -6,9 +6,6 @@ import com.example.mvvmkotlincoroutineretrofitdemo.manager.RetrofitManager
 import com.example.mvvmkotlincoroutineretrofitdemo.model.Rate
 import com.example.mvvmkotlincoroutineretrofitdemo.model.Trade
 import com.example.mvvmkotlincoroutineretrofitdemo.model.Transaction
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -25,14 +22,14 @@ class MainRepository {
     /*
     this fun is suspend fun means it will execute in different thread
      */
-    suspend fun getRatesForTime() {
+    suspend fun getRatesForTime(instrument: String, timeFrom : Long, timeTo : Long) {
 
         try {
 
             //here api calling became so simple just 1 line of code
             //there is no callback needed
 
-            val response = apiRate.getRatesForTime().await()
+            val response = apiRate.getRatesForTime(instrument, timeFrom, timeTo).await()
 
             Log.d(TAG, "$response")
 

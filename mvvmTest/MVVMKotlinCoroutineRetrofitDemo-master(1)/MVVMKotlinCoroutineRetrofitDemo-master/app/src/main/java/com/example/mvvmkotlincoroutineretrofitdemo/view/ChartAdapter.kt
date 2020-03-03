@@ -33,15 +33,18 @@ class ChartAdapter  {
             .titleFontSize(20f)
             .subtitleFontColor("#0B1929")
             .titleFontWeight(AAChartFontWeightType.Bold)
+            .markerRadius(0f)
+            .borderRadius(0f)
+            .backgroundColor( "#1D122C")
             .subtitle("2019")
             .yAxisTitle("Values in $")
-            .legendEnabled(true)
             .chartType(AAChartType.Pie)
             .axesTextColor("#0B1929")
             .dataLabelsFontColor("#0B1929")
-            .dataLabelsFontWeight(AAChartFontWeightType.Regular)
+            .dataLabelsFontWeight(AAChartFontWeightType.Bold)
             .legendEnabled(false)
-            .stacking(AAChartStackingType.Normal)
+            .stacking(AAChartStackingType.False)
+            .dataLabelsEnabled(false)
             .colorsTheme(
                 arrayOf(
                     "#306FB3",

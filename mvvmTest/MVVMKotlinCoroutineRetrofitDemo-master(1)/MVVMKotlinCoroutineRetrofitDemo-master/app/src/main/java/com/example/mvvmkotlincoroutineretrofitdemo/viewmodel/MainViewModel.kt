@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mvvmkotlincoroutineretrofitdemo.repository.MainRepository
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 class MainViewModel : ViewModel() {
 
@@ -17,10 +18,13 @@ class MainViewModel : ViewModel() {
 
     val tradesSuccessLiveData = mainRepository.tradesSuccessLiveData
     val tradesFailureLiveData = mainRepository.tradesFailureLiveData
+    var balancesAtTheEnd = mainRepository.balancesAtTheEnd
+
+
 
     fun getRates() {
 
-        viewModelScope.launch { mainRepository.getRates() }
+        viewModelScope.launch { mainRepository.getRatesForTime() }
 
     }
     fun getTrans() {
@@ -33,4 +37,11 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch { mainRepository.getTrades() }
 
     }
+    fun countingBalance() {
+        viewModelScope.launch { mainRepository.countingBalance(tradesSuccessLiveData.value!!, transSuccessLiveData.value!!) }
+    }
+
+
+
+
 }

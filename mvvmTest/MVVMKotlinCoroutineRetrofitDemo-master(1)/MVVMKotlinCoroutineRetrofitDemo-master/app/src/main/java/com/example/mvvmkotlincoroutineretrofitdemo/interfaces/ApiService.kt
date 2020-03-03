@@ -10,7 +10,9 @@ import retrofit2.http.GET
 interface ApiService {
 
     @GET("/bcv/quotes/bars/btc-usd/1579960500/1582588500")
-    fun getRates(): Deferred<Response<MutableList<Rate>>>
+    fun getRatesForTime(): Deferred<Response<MutableList<Rate>>>
+    @GET("/bcv/quotes/bars/btc-usd/1579960500/1582588500")
+    fun getRate(): Deferred<Response<MutableList<Rate>>>
     @GET("/bcv/transactions")
     fun getTrans(): Deferred<Response<MutableList<Transaction>>>
     @GET("/bcv/trades")

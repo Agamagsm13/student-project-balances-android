@@ -8,6 +8,9 @@ data class Transaction(
     @SerializedName("id")
     @Expose
     val id: Int,
+    @SerializedName("transactionType")
+    @Expose
+    val transactionType: String,
     @SerializedName("dateTime")
     @Expose
     val dateTime: String,

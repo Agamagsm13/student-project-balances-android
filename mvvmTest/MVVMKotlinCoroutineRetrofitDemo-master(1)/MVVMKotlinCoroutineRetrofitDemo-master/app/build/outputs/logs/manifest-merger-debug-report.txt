@@ -4,6 +4,7 @@ ADDED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCo
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:2:1-26:12
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:2:1-26:12
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:2:1-26:12
+MERGED from [com.github.AnyChart:AnyChart-Android:1.1.2] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\ef30d17a138d27c3040ef0c45d629955\jetified-AnyChart-Android-1.1.2\AndroidManifest.xml:2:1-17:12
 MERGED from [androidx.appcompat:appcompat:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\bc466c33e573d3599a593a7929d50e38\appcompat-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.core:core-ktx:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\1d106697599ff25fb3226556e49601ea\core-ktx-1.1.0\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.constraintlayout:constraintlayout:1.1.3] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\495a4330151a662138962153d4278c86\constraintlayout-1.1.3\AndroidManifest.xml:2:1-11:12
@@ -69,6 +70,8 @@ ADDED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCo
 		ADDED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:8:22-64
 application
 ADDED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml:10:5-24:19
+MERGED from [com.github.AnyChart:AnyChart-Android:1.1.2] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\ef30d17a138d27c3040ef0c45d629955\jetified-AnyChart-Android-1.1.2\AndroidManifest.xml:11:5-15:19
+MERGED from [com.github.AnyChart:AnyChart-Android:1.1.2] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\ef30d17a138d27c3040ef0c45d629955\jetified-AnyChart-Android-1.1.2\AndroidManifest.xml:11:5-15:19
 MERGED from [androidx.constraintlayout:constraintlayout:1.1.3] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\495a4330151a662138962153d4278c86\constraintlayout-1.1.3\AndroidManifest.xml:9:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:1.1.3] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\495a4330151a662138962153d4278c86\constraintlayout-1.1.3\AndroidManifest.xml:9:5-20
 MERGED from [androidx.lifecycle:lifecycle-extensions:2.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\720e4bdf8ec5873132a269845fcca317\lifecycle-extensions-2.1.0\AndroidManifest.xml:22:5-23:19
@@ -111,6 +114,8 @@ uses-sdk
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml
 INJECTED from D:\DSX Project\student-project-balances-android\mvvmTest\MVVMKotlinCoroutineRetrofitDemo-master(1)\MVVMKotlinCoroutineRetrofitDemo-master\app\src\main\AndroidManifest.xml
+MERGED from [com.github.AnyChart:AnyChart-Android:1.1.2] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\ef30d17a138d27c3040ef0c45d629955\jetified-AnyChart-Android-1.1.2\AndroidManifest.xml:7:5-9:41
+MERGED from [com.github.AnyChart:AnyChart-Android:1.1.2] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\ef30d17a138d27c3040ef0c45d629955\jetified-AnyChart-Android-1.1.2\AndroidManifest.xml:7:5-9:41
 MERGED from [androidx.appcompat:appcompat:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\bc466c33e573d3599a593a7929d50e38\appcompat-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.appcompat:appcompat:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\bc466c33e573d3599a593a7929d50e38\appcompat-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.core:core-ktx:1.1.0] C:\Users\Slava\.gradle\caches\transforms-2\files-2.1\1d106697599ff25fb3226556e49601ea\core-ktx-1.1.0\AndroidManifest.xml:5:5-7:41
